@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Админ-панель{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-tachometer-alt"></i> Административная панель</h1>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <i class="fas fa-file-alt fa-2x" style="color: var(--primary);"></i>
+        <div class="stat-value">{{ stats.total_suggestions }}</div>
+        <div>Всего предложений</div>
+    </div>
+    <div class="stat-card">
+        <i class="fas fa-users fa-2x" style="color: var(--primary);"></i>
+        <div class="stat-value">{{ stats.total_users }}</div>
+        <div>Пользователей</div>
+    </div>
+    {% for status, count in stats.by_status.items() %}
+    <div class="stat-card">
+        <div class="stat-value">{{ count }}</div>
+        <div><span class="status-badge {{ status }}">{{ status }}</span></div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="display: flex; gap: 1rem; margin-top: 2rem;">
+    <a href="/admin/suggestions" class="btn btn-primary"><i class="fas fa-list"></i> Управление предложениями</a>
+    <a href="/admin/users" class="btn btn-outline"><i class="fas fa-user-cog"></i> Пользователи</a>
+</div>
+{% endblock %}

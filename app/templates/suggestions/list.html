@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Мои предложения{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>{% if my %}Мои предложения{% else %}Все предложения{% endif %}</h1>
+    <a href="/" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> На главную</a>
+</div>
+
+{% if suggestions %}
+<div class="suggestions-grid">
+    {% for s in suggestions %}
+    <div class="card">
+        <h3>{{ s.title }}</h3>
+        <p>{{ s.description[:150] }}{% if s.description|length > 150 %}...{% endif %}</p>
+        <div class="meta">
+            <span class="status-badge {{ s.status.value }}">{{ s.status.value }}</span>
+            {% if s.attachment_path %}
+                <a href="/{{ s.attachment_path }}" target="_blank"><i class="fas fa-paperclip"></i> Вложение</a>
+            {% endif %}
+            <span><i class="far fa-clock"></i> {{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        </div>
+        <a href="/suggestions/{{ s.id }}" class="btn btn-outline btn-sm" style="margin-top: 0.5rem;">Подробнее</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="form-card">
+    <p>У вас пока нет предложений. <a href="/">Создайте первое!</a></p>
+</div>
+{% endif %}
+{% endblock %}
