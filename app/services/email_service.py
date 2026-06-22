@@ -1,5 +1,4 @@
 import logging
-from turtledemo.penrose import start
 from typing import Optional
 from aiosmtplib import send
 from email.message import EmailMessage
