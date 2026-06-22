@@ -26,6 +26,36 @@
     </div>
 </article>
 
+<!-- Комментарии -->
+<div class="card" style="max-width: 700px; margin-top: 2rem;">
+    <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-comments"></i> Комментарии</h3>
+
+    {% if user %}
+    <form method="post" action="/suggestions/{{ suggestion.id }}/comments" style="margin-bottom: 2rem;">
+        <div class="form-group">
+            <textarea name="text" rows="2" placeholder="Ваш комментарий..." required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Отправить</button>
+    </form>
+    {% else %}
+    <p><a href="/auth/login-page">Войдите</a>, чтобы оставить комментарий.</p>
+    {% endif %}
+
+    {% if comments %}
+        {% for c in comments %}
+        <div style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
+            <div style="font-weight: 500; color: var(--text);">{{ c.user_id }}</div>
+            <div style="color: var(--text-light); margin-top: 0.25rem;">{{ c.text }}</div>
+            <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">
+                <i class="far fa-clock"></i> {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <p style="color: var(--text-light);">Пока нет комментариев.</p>
+    {% endif %}
+</div>
+
 <script>
 async function vote(suggestionId, type, btn) {
     const formData = new FormData();

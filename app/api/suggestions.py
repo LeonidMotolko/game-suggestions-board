@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 import uuid
 
+from app.services.comment_service import create_comment, get_comments_for_suggestion
 from app.database import get_async_session
 from app.dependencies import get_current_active_user, get_optional_user
 from app.models.user import User
@@ -118,6 +119,7 @@ async def view_suggestion(
         if vote:
             user_vote = vote.vote_type
 
+    comments = await get_comments_for_suggestion(db, suggestion.id)
     return request.app.state.templates.TemplateResponse(
         "suggestions/detail.html",
         {
@@ -127,6 +129,7 @@ async def view_suggestion(
             "upvotes": upvotes,
             "downvotes": downvotes,
             "user_vote": user_vote,
+            "comments": comments,
         },
     )
 
@@ -145,3 +148,17 @@ async def vote(
         raise HTTPException(status_code=404, detail="Suggestion not found")
     await db.commit()
     return JSONResponse(content=result)
+
+@router.post("/{suggestion_id}/comments")
+async def add_comment(
+    suggestion_id: str,
+    text: str = Form(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    suggestion = await get_suggestion(db, suggestion_id)
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="Suggestion not found")
+    await create_comment(db, current_user.id, suggestion.id, text)
+    await db.commit()
+    return RedirectResponse(url=f"/suggestions/{suggestion_id}", status_code=303)
