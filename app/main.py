@@ -1,24 +1,28 @@
 from contextlib import asynccontextmanager
-from typing import Optional
-from urllib import request
-
-from fastapi import FastAPI, Request, Depends, Form, HTTPException, status
+from fastapi import FastAPI, Request, Depends, Form, HTTPException, status, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import BackgroundTasks
-from app.services.email_service import send_verification_email
-from pydantic import EmailStr
+from typing import Optional
 
 from app.config import settings
 from app.database import engine, async_session_maker, Base
 from app.api import api_router
-from app.services.user_service import authenticate_user, create_user, get_user_by_email, create_admin
-from app.dependencies import get_async_session, get_optional_user
-from app.models import *  # noqa: ensure all models are loaded
+from app.services.user_service import (
+    authenticate_user,
+    create_user,
+    get_user_by_email,
+    create_admin,
+    hash_password,
+    verify_password,
+)
+from app.dependencies import get_async_session, get_optional_user, get_current_active_user
+from app.models.user import User
+from app.models import *  # noqa
 
 templates = Jinja2Templates(directory="app/templates")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +38,7 @@ async def lifespan(app: FastAPI):
     yield
     await engine.dispose()
 
+
 app = FastAPI(
     title="Game Suggestions Board",
     version="1.0.0",
@@ -45,33 +50,53 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads"
 app.state.templates = templates
 app.include_router(api_router)
 
-# Frontend routes for Jinja2 pages
+
+# ---------- Frontend routes ----------
 @app.get("/")
 async def root(
     request: Request,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
     db: AsyncSession = Depends(get_async_session),
-    user: Optional[User] = Depends(get_optional_user)  # автоматически подставится
+    user: Optional[User] = Depends(get_optional_user),
 ):
-    from app.services.suggestion_service import get_suggestions
-    suggestions = await get_suggestions(db)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user, "suggestions": suggestions})
+    from app.services.suggestion_service import get_suggestions, get_user_votes_for_suggestions
+    suggestions_with_votes = await get_suggestions(db, search=search, status=status)
+    suggestions = [item[0] for item in suggestions_with_votes]
+    # Собрать голоса
+    votes_map = {}
+    if user:
+        ids = [s.id for s in suggestions]
+        votes_map = await get_user_votes_for_suggestions(db, user.id, ids)
+    # Передать в шаблон
+    suggestions_data = [
+        (s, item[1], item[2], votes_map.get(str(s.id))) for s, item in zip(suggestions, suggestions_with_votes)
+    ]
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "user": user,
+        "suggestions_data": suggestions_data,
+        "search": search or "",
+        "selected_status": status or "",
+    })
 
 @app.get("/auth/register-page")
 async def register_page(request: Request):
     return templates.TemplateResponse("auth/register.html", {"request": request})
 
+
 @app.get("/auth/login-page")
 async def login_page(request: Request):
     return templates.TemplateResponse("auth/login.html", {"request": request})
 
+
 @app.get("/auth/logout")
 async def logout():
-    # In a cookie-based JWT scenario we would clear cookie; here we just redirect
     response = RedirectResponse(url="/", status_code=303)
-    response.delete_cookie("access_token")  # if we were using cookies
+    response.delete_cookie("access_token")
     return response
 
-# Override login/logout to use forms for Jinja2
+
 @app.post("/auth/login")
 async def login_form(
     request: Request,
@@ -101,7 +126,6 @@ async def login_form(
     from app.api.auth import create_access_token
     access_token = create_access_token({"sub": str(user.id)})
     response = RedirectResponse(url="/", status_code=303)
-    # Установка JWT в cookie (httpOnly) для веб-интерфейса
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
@@ -110,10 +134,11 @@ async def login_form(
     )
     return response
 
+
 @app.post("/auth/register")
 async def register_form(
-    background_tasks: BackgroundTasks,
     request: Request,
+    background_tasks: BackgroundTasks,
     email: str = Form(...),
     password: str = Form(...),
     db: AsyncSession = Depends(get_async_session),
@@ -135,16 +160,17 @@ async def register_form(
 
     if settings.EMAIL_VERIFICATION_REQUIRED:
         from app.api.auth import create_access_token
+        from app.services.email_service import send_verification_email
         token = create_access_token({"sub": str(user.id), "verify": True})
         background_tasks.add_task(send_verification_email, user.email, token)
 
     await db.commit()
     return RedirectResponse(url="/auth/login-page", status_code=303)
 
+
 @app.get("/auth/verify")
 async def verify_email_web(token: str, db: AsyncSession = Depends(get_async_session)):
     from jose import jwt, JWTError
-    from app.models.user import User
     import uuid
     from sqlalchemy import select
 
@@ -163,3 +189,39 @@ async def verify_email_web(token: str, db: AsyncSession = Depends(get_async_sess
     user.is_verified = True
     await db.commit()
     return RedirectResponse(url="/auth/login-page?verified=1", status_code=303)
+
+
+# ---------- Профиль и смена пароля ----------
+@app.get("/profile")
+async def profile_page(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+):
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": current_user,
+    })
+
+
+@app.post("/profile/change-password")
+async def change_password(
+    request: Request,
+    old_password: str = Form(...),
+    new_password: str = Form(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    if not verify_password(old_password, current_user.hashed_password):
+        return templates.TemplateResponse("profile.html", {
+            "request": request,
+            "user": current_user,
+            "error": "Неверный старый пароль",
+        })
+    current_user.hashed_password = hash_password(new_password)
+    await db.commit()
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": current_user,
+        "message": "Пароль успешно изменён",
+    })
+

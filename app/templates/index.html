@@ -10,6 +10,20 @@
     {% endif %}
 </div>
 
+<div class="search-bar">
+    <form method="get" action="/">
+        <input type="text" name="search" placeholder="Поиск по предложениям..." value="{{ search }}">
+        <select name="status">
+            <option value="">Все статусы</option>
+            <option value="new" {{ 'selected' if selected_status == 'new' }}>Новые</option>
+            <option value="reviewed" {{ 'selected' if selected_status == 'reviewed' }}>Рассмотренные</option>
+            <option value="accepted" {{ 'selected' if selected_status == 'accepted' }}>Принятые</option>
+            <option value="rejected" {{ 'selected' if selected_status == 'rejected' }}>Отклонённые</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search"></i> Искать</button>
+    </form>
+</div>
+
 {% if user %}
 <div class="form-card" id="create-form" style="margin-bottom: 2rem;">
     <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-pen"></i> Новое предложение</h3>
@@ -38,10 +52,10 @@
 {% endif %}
 
 <div class="suggestions-grid">
-    {% for s in suggestions %}
+    {% for s, up, down, user_vote in suggestions_data %}
     <a href="/suggestions/{{ s.id }}" class="card">
         <h3>{{ s.title }}</h3>
-        <p>{{ s.description[:30] }}{% if s.description|length > 30 %}...{% endif %}</p>
+        <p>{{ s.description[:40] }}{% if s.description|length > 40 %}...{% endif %}</p>
         <div class="meta">
             <span class="status-badge {{ s.status.value }}">{{ s.status.value }}</span>
             {% if s.attachment_path %}
@@ -49,10 +63,43 @@
             {% endif %}
             <span><i class="far fa-clock"></i> {{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
         </div>
+        <div class="vote-section" style="margin-top: 0.5rem;">
+            <button class="vote-btn {% if user_vote == 'up' %}active{% endif %}" onclick="event.preventDefault(); vote('{{ s.id }}', 'up', this)">👍 <span class="up-count">{{ up }}</span></button>
+            <button class="vote-btn {% if user_vote == 'down' %}active{% endif %}" onclick="event.preventDefault(); vote('{{ s.id }}', 'down', this)">👎 <span class="down-count">{{ down }}</span></button>
+        </div>
     </a>
     {% endfor %}
-    {% if not suggestions %}
+    {% if not suggestions_data %}
     <p>Пока нет предложений. Будьте первым!</p>
     {% endif %}
 </div>
+
+<script>
+async function vote(suggestionId, type, btn) {
+    const formData = new FormData();
+    formData.append('vote_type', type);
+    try {
+        const response = await fetch(`/suggestions/${suggestionId}/vote`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            console.error('Ошибка голосования');
+            return;
+        }
+        const data = await response.json();
+        // Обновить счётчики в текущей карточке
+        const card = btn.closest('.card');
+        card.querySelector('.up-count').textContent = data.upvotes;
+        card.querySelector('.down-count').textContent = data.downvotes;
+        // Переключить активную кнопку
+        card.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('active'));
+        if (data.upvotes + data.downvotes > 0) {
+            btn.classList.add('active');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
 {% endblock %}

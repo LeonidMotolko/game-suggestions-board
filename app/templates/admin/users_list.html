@@ -26,7 +26,7 @@
                 <td>{{ '<i class="fas fa-check-circle" style="color: var(--success);"></i>'|safe if u.is_verified else '<i class="fas fa-times-circle" style="color: var(--danger);"></i>'|safe }}</td>
                 <td>
                     <form method="post" action="/admin/users/{{ u.id }}/ban" style="display:inline;">
-                        <button type="submit" class="btn btn-sm {% if u.is_active %}btn-warning{% else %}btn-success{% endif %}" onclick="return confirm('{{ 'Разбанить' if not u.is_active else 'Забанить' }} пользователя?')">
+                        <button type="submit" class="btn btn-sm {% if u.is_active %}btn-warning{% else %}btn-success{% endif %}">
                             <i class="fas {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
                             {{ 'Забанить' if u.is_active else 'Разбанить' }}
                         </button>
