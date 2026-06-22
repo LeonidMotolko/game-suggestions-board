@@ -17,7 +17,7 @@ async def send_verification_email(email: str, token: str):
         return
 
     message = EmailMessage()
-    message["From"] = settings.SMTP_FROM
+    message["From"] = f"Game Suggestions No-Reply <{settings.SMTP_FROM}>"
     message["To"] = email
     message["Subject"] = "Подтверждение регистрации Game Suggestions"
     message.set_content(body)
