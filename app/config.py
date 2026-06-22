@@ -36,12 +36,11 @@ class Settings(BaseSettings):
 
     def get_database_url(self) -> str:
         if self.DATABASE_URL:
-            return self.DATABASE_URL
-        return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}"
-            f":{self.POSTGRES_PASSWORD}"
-            f"@localhost:5432/{self.POSTGRES_DB}"
-        )
+            url = self.DATABASE_URL
+            if url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@localhost:5432/{self.POSTGRES_DB}"
 
 
 settings = Settings()
