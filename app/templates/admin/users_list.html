@@ -11,6 +11,7 @@
         <thead>
             <tr>
                 <th>Email</th>
+                <th>Никнейм</th>
                 <th>Роль</th>
                 <th>Активен</th>
                 <th>Подтверждён</th>
@@ -20,6 +21,7 @@
         <tbody>
             {% for u in users %}
             <tr>
+                <td>{{ u.nickname or "—" }}</td>
                 <td><i class="far fa-envelope"></i> {{ u.email }}</td>
                 <td><span class="status-badge {% if u.role == 'admin' %}accepted{% else %}new{% endif %}">{{ u.role }}</span></td>
                 <td>{{ '<i class="fas fa-check-circle" style="color: var(--success);"></i>'|safe if u.is_active else '<i class="fas fa-times-circle" style="color: var(--danger);"></i>'|safe }}</td>

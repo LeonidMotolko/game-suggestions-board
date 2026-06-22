@@ -20,34 +20,52 @@
             </button>
 
             <ul class="sidebar-nav">
-                <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">
-                    <i class="fas fa-home"></i> Главная
-                </a></li>
                 {% if user %}
-                <li><a href="/suggestions/my" class="{% if request.path.startswith('/suggestions/my') %}active{% endif %}">
-                    <i class="fas fa-lightbulb"></i> Мои предложения
-                </a></li>
+                <!-- Профиль (вверху) -->
                 <li><a href="/profile" class="{% if request.path.startswith('/profile') %}active{% endif %}">
                     <i class="fas fa-user-cog"></i> Профиль
                 </a></li>
-                {% if user.role == 'admin' %}
-                <li><a href="/admin/dashboard" class="{% if request.path.startswith('/admin') %}active{% endif %}">
-                    <i class="fas fa-shield-haltered"></i> Админ-панель
-                </a></li>
+                <!-- Отступ -->
+                <li class="sidebar-spacer"></li>
                 {% endif %}
+
+                <!-- Главная -->
+                <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Главная
+                </a></li>
+
+                {% if user %}
+                <!-- Мои предложения -->
+                <li><a href="/suggestions/my" class="{% if request.path.startswith('/suggestions/my') %}active{% endif %}">
+                    <i class="fas fa-lightbulb"></i> Мои предложения
+                </a></li>
+                <!-- Отступ перед выходом -->
+                <li class="sidebar-spacer"></li>
+                <!-- Выйти -->
                 <li><a href="/auth/logout"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                 {% else %}
                 <li><a href="/auth/login-page"><i class="fas fa-sign-in-alt"></i> Войти</a></li>
                 <li><a href="/auth/register-page"><i class="fas fa-user-plus"></i> Регистрация</a></li>
                 {% endif %}
             </ul>
+
+            {% if user and user.role == 'admin' %}
+            <!-- Админ-панель в самом низу боковой панели (после списка) -->
+            <div class="sidebar-admin-link">
+                <a href="/admin/dashboard" class="{% if request.path.startswith('/admin') %}active{% endif %}">
+                    <i class="fas fa-shield-haltered"></i> Админ-панель
+                </a>
+            </div>
+            {% endif %}
+
             {% if user %}
             <div class="sidebar-user">
-                <span class="email">{{ user.email }}</span>
+                <span class="email">{{ user.nickname or "Пользователь" }}</span>
                 <span class="role">{{ 'Администратор' if user.role == 'admin' else 'Пользователь' }}</span>
             </div>
             {% endif %}
         </aside>
+
         <main class="main-content">
             {% block content %}{% endblock %}
         </main>
