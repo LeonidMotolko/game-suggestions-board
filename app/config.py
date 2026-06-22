@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "change_me_strong_password"
     POSTGRES_DB: str = "game_suggestions"
 
-    # Database URL (строится из компонентов, если не задан явно)
-    BASE_URL: str = ""
+    # Готовый URL для подключения (если задан в окружении, используется он)
+    DATABASE_URL: str = ""
 
     # Auth
     SECRET_KEY: str = "change-me-to-a-random-secret-key"
@@ -34,9 +34,13 @@ class Settings(BaseSettings):
     DEFAULT_ADMIN_EMAIL: str = "admin@example.com"
     DEFAULT_ADMIN_PASSWORD: str = "admin123"
 
+    # Базовый URL сайта (для ссылок в письмах)
+    BASE_URL: str = "http://localhost:8000"
+
     def get_database_url(self) -> str:
         if self.DATABASE_URL:
             url = self.DATABASE_URL
+            # Render передаёт синхронный URL, переделываем в asyncpg
             if url.startswith("postgresql://"):
                 url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
             return url
