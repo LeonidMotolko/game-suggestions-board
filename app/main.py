@@ -6,6 +6,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
+from sqlalchemy import text
+
 from app.config import settings
 from app.database import engine, async_session_maker, Base
 from app.api import api_router
@@ -26,15 +28,19 @@ templates = Jinja2Templates(directory="app/templates")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Создание таблиц (если ещё нет)
     async with engine.begin() as conn:
-        # Создание таблиц
         await conn.run_sync(Base.metadata.create_all)
-        # Добавляем колонку nickname, если её нет
-        try:
-            await conn.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(100)')
-        except Exception:
-            pass  # если колонка уже есть, ошибка игнорируется
 
+    # Добавляем колонку nickname вне транзакции
+    async with engine.connect() as conn:
+        try:
+            await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(100)"))
+            await conn.commit()
+        except Exception:
+            pass
+
+    # Создание дефолтного админа
     async with async_session_maker() as session:
         await create_admin(session, settings.DEFAULT_ADMIN_EMAIL, settings.DEFAULT_ADMIN_PASSWORD)
         await session.commit()
