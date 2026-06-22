@@ -26,11 +26,15 @@ templates = Jinja2Templates(directory="app/templates")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Создание таблиц при старте (для разработки; в production используйте Alembic)
     async with engine.begin() as conn:
+        # Создание таблиц
         await conn.run_sync(Base.metadata.create_all)
+        # Добавляем колонку nickname, если её нет
+        try:
+            await conn.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS nickname VARCHAR(100)')
+        except Exception:
+            pass  # если колонка уже есть, ошибка игнорируется
 
-    # Создание дефолтного админа
     async with async_session_maker() as session:
         await create_admin(session, settings.DEFAULT_ADMIN_EMAIL, settings.DEFAULT_ADMIN_PASSWORD)
         await session.commit()
