@@ -39,13 +39,13 @@
 
 <div class="suggestions-grid">
     {% for s in suggestions %}
-    <a href="/suggestions/{{ s.id }}" class="card card-link">
+    <a href="/suggestions/{{ s.id }}" class="card">
         <h3>{{ s.title }}</h3>
-        <p>{{ s.description[:150] }}{% if s.description|length > 150 %}...{% endif %}</p>
+        <p>{{ s.description[:30] }}{% if s.description|length > 30 %}...{% endif %}</p>
         <div class="meta">
             <span class="status-badge {{ s.status.value }}">{{ s.status.value }}</span>
             {% if s.attachment_path %}
-                <span class="attachment-indicator">📎 Вложение</span>
+                <span class="attachment-indicator" style="color: var(--text-light); font-size: 0.9rem;">📎 Вложение</span>
             {% endif %}
             <span><i class="far fa-clock"></i> {{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
         </div>
