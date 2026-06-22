@@ -1,6 +1,13 @@
 /* ===== Общие стили ===== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 :root {
+  /* Светлая тема (по умолчанию) */
+  --bg: #f5f5f9;
+  --card-bg: #ffffff;
+  --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  --text: #333;
+  --text-light: #666;
   --sidebar-bg: #1e1e2d;
   --sidebar-text: #a2a3b7;
   --sidebar-active: #ffffff;
@@ -10,20 +17,39 @@
   --success: #2ecc71;
   --warning: #f39c12;
   --danger: #e74c3c;
-  --bg: #f5f5f9;
-  --card-bg: #ffffff;
-  --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  --border-color: #ddd;
+  --input-bg: #fafafa;
   --border-radius: 10px;
   --transition: 0.2s ease;
-  --text: #333;
-  --text-light: #666;
 }
+
+/* Тёмная тема */
+body.dark-theme {
+  --bg: #1a1a2e;
+  --card-bg: #16213e;
+  --card-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  --text: #e0e0e0;
+  --text-light: #a0a0a0;
+  --sidebar-bg: #0f0f1a;
+  --sidebar-text: #8a8b9a;
+  --sidebar-active: #ffffff;
+  --sidebar-hover-bg: #2a2a3c;
+  --primary: #7c8aff;
+  --primary-hover: #6a78f0;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --border-color: #444;
+  --input-bg: #1e2a3a;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
+  transition: background 0.3s, color 0.3s;
 }
 a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -40,6 +66,7 @@ a:hover { text-decoration: underline; }
   display: flex;
   flex-direction: column;
   z-index: 100;
+  transition: background 0.3s;
 }
 .sidebar-brand {
   font-size: 1.5rem;
@@ -94,11 +121,32 @@ a:hover { text-decoration: underline; }
   color: var(--primary);
 }
 
+/* Переключатель темы */
+.theme-toggle {
+  background: none;
+  border: none;
+  color: var(--sidebar-text);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 1rem;
+}
+.theme-toggle:hover {
+  background: var(--sidebar-hover-bg);
+  color: white;
+}
+
 /* ===== Основной контент ===== */
 .main-content {
   margin-left: 260px;
   padding: 2rem;
   min-height: 100vh;
+  transition: background 0.3s;
 }
 .page-header {
   margin-bottom: 2rem;
@@ -119,7 +167,8 @@ a:hover { text-decoration: underline; }
   border-radius: var(--border-radius);
   padding: 1.5rem;
   box-shadow: var(--card-shadow);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition), background 0.3s;
+  color: var(--text);
 }
 .card:hover {
   transform: translateY(-3px);
@@ -129,6 +178,7 @@ a:hover { text-decoration: underline; }
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: var(--text);
 }
 .card p {
   color: var(--text-light);
@@ -139,17 +189,8 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 1rem;
   font-size: 0.85rem;
+  color: var(--text-light);
 }
-.card .status-badge {
-  padding: 0.3rem 0.6rem;
-  border-radius: 20px;
-  color: white;
-  font-weight: 500;
-}
-.status-badge.new { background: var(--primary); }
-.status-badge.reviewed { background: var(--warning); }
-.status-badge.accepted { background: var(--success); }
-.status-badge.rejected { background: var(--danger); }
 
 /* Кликабельная карточка-ссылка */
 a.card {
@@ -161,6 +202,19 @@ a.card:hover {
   color: inherit;
   text-decoration: none;
 }
+
+/* Статусные бейджи */
+.status-badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+.status-badge.new { background: var(--primary); }
+.status-badge.reviewed { background: var(--warning); }
+.status-badge.accepted { background: var(--success); }
+.status-badge.rejected { background: var(--danger); }
 
 /* ===== Кнопки ===== */
 .btn {
@@ -176,14 +230,8 @@ a.card:hover {
   transition: background var(--transition), transform var(--transition);
   text-decoration: none;
 }
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-.btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
 .btn-success { background: var(--success); color: white; }
 .btn-warning { background: var(--warning); color: white; }
 .btn-danger  { background: var(--danger); color: white; }
@@ -192,10 +240,7 @@ a.card:hover {
   color: var(--primary);
   background: transparent;
 }
-.btn-outline:hover {
-  background: var(--primary);
-  color: white;
-}
+.btn-outline:hover { background: var(--primary); color: white; }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
 
 /* ===== Формы ===== */
@@ -206,10 +251,9 @@ a.card:hover {
   box-shadow: var(--card-shadow);
   max-width: 500px;
   margin: 0 auto;
+  color: var(--text);
 }
-.form-group {
-  margin-bottom: 1.5rem;
-}
+.form-group { margin-bottom: 1.5rem; }
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
@@ -220,12 +264,13 @@ a.card:hover {
 .form-group textarea {
   width: 100%;
   padding: 0.8rem 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
   transition: border-color var(--transition), box-shadow var(--transition);
-  background: #fafafa;
+  background: var(--input-bg);
+  color: var(--text);
 }
 .form-group input:focus,
 .form-group textarea:focus {
@@ -245,18 +290,21 @@ a.card:hover {
 table {
   width: 100%;
   border-collapse: collapse;
+  color: var(--text);
 }
 th, td {
   padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color);
 }
 th {
   background: #fafafa;
   font-weight: 600;
   color: var(--text-light);
 }
+body.dark-theme th { background: #1a2740; }
 tr:hover td { background: #f5f5f9; }
+body.dark-theme tr:hover td { background: #1f2b40; }
 
 /* ===== Статистика ===== */
 .stats-grid {
@@ -271,6 +319,7 @@ tr:hover td { background: #f5f5f9; }
   padding: 1.5rem;
   box-shadow: var(--card-shadow);
   text-align: center;
+  color: var(--text);
 }
 .stat-value {
   font-size: 2.2rem;
@@ -284,65 +333,69 @@ tr:hover td { background: #f5f5f9; }
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-width: 100%;
+  color: var(--text);
 }
 
 /* ===== Поисковая панель ===== */
 .search-bar {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    padding: 1rem 1.5rem;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 2rem;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 2rem;
 }
 .search-bar form {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 .search-bar input[type="text"] {
-    flex: 1;
-    min-width: 200px;
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-family: inherit;
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--input-bg);
+  color: var(--text);
 }
 .search-bar select {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-family: inherit;
-    background: white;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--input-bg);
+  color: var(--text);
 }
 
 /* Голосование */
 .vote-section {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-top: 0.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.5rem;
 }
 .vote-btn {
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    padding: 0.3rem 0.8rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-    color: var(--text-light);
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  color: var(--text-light);
 }
 .vote-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 .vote-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
 }
 
 /* ===== Адаптивность ===== */

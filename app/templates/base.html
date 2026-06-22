@@ -13,6 +13,12 @@
             <div class="sidebar-brand">
                 <i class="fas fa-gamepad"></i> GameSuggest
             </div>
+
+            <!-- Переключатель темы -->
+            <button class="theme-toggle" id="theme-toggle" title="Переключить тему">
+                <i class="fas fa-moon"></i> <span>Тёмная тема</span>
+            </button>
+
             <ul class="sidebar-nav">
                 <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">
                     <i class="fas fa-home"></i> Главная
@@ -46,5 +52,38 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    <script>
+        // Переключение темы с сохранением в localStorage
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+        const span = themeToggle.querySelector('span');
+
+        function setTheme(isDark) {
+            if (isDark) {
+                body.classList.add('dark-theme');
+                icon.className = 'fas fa-sun';
+                span.textContent = 'Светлая тема';
+            } else {
+                body.classList.remove('dark-theme');
+                icon.className = 'fas fa-moon';
+                span.textContent = 'Тёмная тема';
+            }
+            localStorage.setItem('dark-theme', isDark ? 'true' : 'false');
+        }
+
+        // Загрузка сохранённой темы
+        const saved = localStorage.getItem('dark-theme');
+        if (saved === 'true') {
+            setTheme(true);
+        } else {
+            setTheme(false);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            setTheme(!body.classList.contains('dark-theme'));
+        });
+    </script>
 </body>
 </html>
