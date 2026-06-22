@@ -28,14 +28,24 @@ async def send_verification_email(email: str, token: str):
     message.set_content(body)
 
     try:
-        await send(
-            message,
-            hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            start_tls=True,
-        )
+        if settings.SMTP_PORT == 465:
+            await send(
+                message,
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_USER,
+                password=settings.SMTP_PASSWORD,
+                use_tls=True,  # SSL для порта 465
+            )
+        else:
+            await send(
+                message,
+                hostname=settings.SMTP_HOST,
+                port=settings.SMTP_PORT,
+                username=settings.SMTP_USER,
+                password=settings.SMTP_PASSWORD,
+                start_tls=True,  # STARTTLS для остальных
+            )
         logger.info(f"Письмо отправлено на {email}")
     except Exception as e:
         logger.error(f"Ошибка отправки письма: {e}")
