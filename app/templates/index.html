@@ -39,17 +39,17 @@
 
 <div class="suggestions-grid">
     {% for s in suggestions %}
-    <div class="card">
+    <a href="/suggestions/{{ s.id }}" class="card card-link">
         <h3>{{ s.title }}</h3>
         <p>{{ s.description[:150] }}{% if s.description|length > 150 %}...{% endif %}</p>
         <div class="meta">
             <span class="status-badge {{ s.status.value }}">{{ s.status.value }}</span>
             {% if s.attachment_path %}
-                <a href="/{{ s.attachment_path }}" target="_blank"><i class="fas fa-paperclip"></i> Вложение</a>
+                <span class="attachment-indicator">📎 Вложение</span>
             {% endif %}
             <span><i class="far fa-clock"></i> {{ s.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
         </div>
-    </div>
+    </a>
     {% endfor %}
     {% if not suggestions %}
     <p>Пока нет предложений. Будьте первым!</p>
