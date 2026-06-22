@@ -69,6 +69,11 @@ async def update_suggestion(db: AsyncSession, suggestion: Suggestion, update_dat
 
 
 async def delete_suggestion(db: AsyncSession, suggestion: Suggestion) -> None:
+    # Явно удаляем связанные голоса
+    await db.execute(
+        select(Vote).where(Vote.suggestion_id == suggestion.id)
+    )
+    # Удаляем само предложение
     await db.delete(suggestion)
     await db.flush()
 
