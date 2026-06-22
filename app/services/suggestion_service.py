@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 import uuid
-from sqlalchemy import select, func, or_, case
+from sqlalchemy import select, func, or_, case, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.suggestion import Suggestion, SuggestionStatus
 from app.models.user import User
@@ -26,7 +26,7 @@ async def get_suggestions(
     search: Optional[str] = None,
     status: Optional[SuggestionStatus] = None,
     user_id: Optional[uuid.UUID] = None,
-) -> List[Tuple[Suggestion, int, int]]:  # (suggestion, upvotes, downvotes)
+) -> List[Tuple[Suggestion, int, int]]:
     query = select(
         Suggestion,
         func.coalesce(func.sum(case((Vote.vote_type == "up", 1), else_=0)), 0).label("upvotes"),
@@ -69,11 +69,9 @@ async def update_suggestion(db: AsyncSession, suggestion: Suggestion, update_dat
 
 
 async def delete_suggestion(db: AsyncSession, suggestion: Suggestion) -> None:
-    # Явно удаляем связанные голоса
-    await db.execute(
-        select(Vote).where(Vote.suggestion_id == suggestion.id)
-    )
-    # Удаляем само предложение
+    # Сначала удаляем все голоса, связанные с предложением
+    await db.execute(delete(Vote).where(Vote.suggestion_id == suggestion.id))
+    # Затем удаляем само предложение
     await db.delete(suggestion)
     await db.flush()
 
@@ -92,15 +90,11 @@ async def get_dashboard_stats(db: AsyncSession):
     }
 
 
-# --- Голосование ---
 async def vote_suggestion(db: AsyncSession, user_id: uuid.UUID, suggestion_id: uuid.UUID, vote_type: str) -> dict:
-    """Проголосовать за предложение. Возвращает актуальные счётчики."""
-    # Проверить, существует ли предложение
     suggestion = await get_suggestion(db, suggestion_id)
     if not suggestion:
         return None
 
-    # Найти существующий голос
     existing_vote = await db.execute(
         select(Vote).where(Vote.user_id == user_id, Vote.suggestion_id == suggestion_id)
     )
@@ -108,19 +102,15 @@ async def vote_suggestion(db: AsyncSession, user_id: uuid.UUID, suggestion_id: u
 
     if existing:
         if existing.vote_type == vote_type:
-            # Повторный клик – удалить голос
             await db.delete(existing)
         else:
-            # Изменить тип голоса
             existing.vote_type = vote_type
     else:
-        # Новый голос
         vote = Vote(user_id=user_id, suggestion_id=suggestion_id, vote_type=vote_type)
         db.add(vote)
 
     await db.flush()
 
-    # Получить обновлённые счётчики
     upvotes = await db.scalar(
         select(func.count()).where(Vote.suggestion_id == suggestion_id, Vote.vote_type == "up")
     )
@@ -131,7 +121,6 @@ async def vote_suggestion(db: AsyncSession, user_id: uuid.UUID, suggestion_id: u
 
 
 async def get_user_votes_for_suggestions(db: AsyncSession, user_id: uuid.UUID, suggestion_ids: List[uuid.UUID]) -> dict:
-    """Возвращает словарь {suggestion_id: vote_type} для списка предложений."""
     if not suggestion_ids:
         return {}
     result = await db.execute(
