@@ -45,7 +45,7 @@
         {% for c in comments %}
         <div style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 500; color: var(--text);">{{ c.user.email }}</span>
+                <span style="font-weight: 500; color: var(--text);">{{ c.user.nickname or "User" }}</span>
                 <span style="font-size: 0.8rem; color: var(--text-light);">{{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
             </div>
             <div style="color: var(--text); margin: 0.5rem 0;">{{ c.text }}</div>

@@ -6,9 +6,20 @@
 </div>
 
 <div class="form-card" style="margin-top: 2rem;">
+    <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-user-edit"></i> Изменить никнейм</h3>
+    {% if message %}<div style="background: #d4edda; color: #155724; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">{{ message }}</div>{% endif %}
+    <form method="post" action="/profile/change-nickname">
+        <div class="form-group">
+            <label>Никнейм</label>
+            <input type="text" name="nickname" value="{{ user.nickname or '' }}" maxlength="100">
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Сохранить</button>
+    </form>
+</div>
+
+<div class="form-card" style="margin-top: 2rem;">
     <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-lock"></i> Смена пароля</h3>
     {% if error %}<div style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">{{ error }}</div>{% endif %}
-    {% if message %}<div style="background: #d4edda; color: #155724; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem;">{{ message }}</div>{% endif %}
     <form method="post" action="/profile/change-password">
         <div class="form-group">
             <label>Старый пароль</label>

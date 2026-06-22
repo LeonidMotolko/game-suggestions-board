@@ -141,6 +141,7 @@ async def register_form(
     background_tasks: BackgroundTasks,
     email: str = Form(...),
     password: str = Form(...),
+    nickname: str = Form(""),
     db: AsyncSession = Depends(get_async_session),
 ):
     existing = await get_user_by_email(db, email)
@@ -157,6 +158,8 @@ async def register_form(
         is_verified=not settings.EMAIL_VERIFICATION_REQUIRED,
         is_active=True,
     )
+    if nickname.strip():
+        user.nickname = nickname.strip()
 
     if settings.EMAIL_VERIFICATION_REQUIRED:
         from app.api.auth import create_access_token
@@ -225,3 +228,17 @@ async def change_password(
         "message": "Пароль успешно изменён",
     })
 
+@app.post("/profile/change-nickname")
+async def change_nickname(
+    request: Request,
+    nickname: str = Form(""),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    current_user.nickname = nickname.strip() or None
+    await db.commit()
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": current_user,
+        "message": "Никнейм обновлён",
+    })
