@@ -8,9 +8,14 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 async def send_verification_email(email: str, token: str):
-    """Отправляет письмо для подтверждения email. Если SMTP не настроен, выводит ссылку в лог."""
     verify_url = f"{settings.BASE_URL}/auth/verify?token={token}"
-    body = f"Для подтверждения email перейдите по ссылке: {verify_url}"
+    body = (
+        "Добро пожаловать в Game Suggestions!\n\n"
+        "Подтвердите свою почту, перейдя по ссылке ниже:\n"
+        f"{verify_url}\n\n"
+        "Если вы не регистрировались, просто проигнорируйте это письмо.\n\n"
+        "С уважением,\nКоманда Game Suggestions"
+    )
 
     if not settings.SMTP_HOST:
         logger.info(f"Верификационное письмо для {email}: {verify_url}")
