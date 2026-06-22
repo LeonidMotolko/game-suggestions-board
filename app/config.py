@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "game_suggestions"
 
     # Database URL (строится из компонентов, если не задан явно)
-    BASE_URL: str = "http://localhost:8000"
+    BASE_URL: str = ""
 
     # Auth
     SECRET_KEY: str = "change-me-to-a-random-secret-key"
