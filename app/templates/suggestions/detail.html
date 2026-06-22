@@ -44,11 +44,29 @@
     {% if comments %}
         {% for c in comments %}
         <div style="border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
-            <div style="font-weight: 500; color: var(--text);">{{ c.user_id }}</div>
-            <div style="color: var(--text-light); margin-top: 0.25rem;">{{ c.text }}</div>
-            <div style="font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem;">
-                <i class="far fa-clock"></i> {{ c.created_at.strftime('%d.%m.%Y %H:%M') }}
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 500; color: var(--text);">{{ c.user.email }}</span>
+                <span style="font-size: 0.8rem; color: var(--text-light);">{{ c.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
             </div>
+            <div style="color: var(--text); margin: 0.5rem 0;">{{ c.text }}</div>
+            {% if user and (user.id == c.user_id or user.role == 'admin') %}
+            <div style="display: flex; gap: 0.5rem;">
+                <!-- Кнопка удаления -->
+                <form method="post" action="/suggestions/{{ suggestion.id }}/comments/{{ c.id }}/delete" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> Удалить</button>
+                </form>
+                <!-- Кнопка редактирования (открывает форму ниже) -->
+                <button class="btn btn-sm btn-outline" onclick="toggleEditForm('{{ c.id }}')"><i class="fas fa-edit"></i> Редактировать</button>
+            </div>
+            <!-- Форма редактирования (скрыта по умолчанию) -->
+            <form method="post" action="/suggestions/{{ suggestion.id }}/comments/{{ c.id }}/edit" id="edit-form-{{ c.id }}" style="display: none; margin-top: 0.5rem;">
+                <div class="form-group">
+                    <textarea name="text" rows="2" required>{{ c.text }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Сохранить</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="toggleEditForm('{{ c.id }}')">Отмена</button>
+            </form>
+            {% endif %}
         </div>
         {% endfor %}
     {% else %}
@@ -78,6 +96,15 @@ async function vote(suggestionId, type, btn) {
         }
     } catch (e) {
         console.error(e);
+    }
+}
+
+function toggleEditForm(commentId) {
+    const form = document.getElementById('edit-form-' + commentId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
     }
 }
 </script>

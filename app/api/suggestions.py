@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 import uuid
 
+from app.models.comment import Comment
 from app.services.comment_service import create_comment, get_comments_for_suggestion
 from app.database import get_async_session
 from app.dependencies import get_current_active_user, get_optional_user
@@ -13,10 +14,7 @@ from app.services.suggestion_service import (
     create_suggestion,
     get_suggestions,
     get_suggestion,
-    update_suggestion,
-    delete_suggestion,
     vote_suggestion,
-    get_user_votes_for_suggestions,
 )
 from app.services.storage_service import get_storage, StorageInterface
 from app.config import settings
@@ -160,5 +158,44 @@ async def add_comment(
     if not suggestion:
         raise HTTPException(status_code=404, detail="Suggestion not found")
     await create_comment(db, current_user.id, suggestion.id, text)
+    await db.commit()
+    return RedirectResponse(url=f"/suggestions/{suggestion_id}", status_code=303)
+
+@router.post("/{suggestion_id}/comments/{comment_id}/delete")
+async def delete_comment(
+    suggestion_id: str,
+    comment_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    # Получаем комментарий
+    from app.services.comment_service import delete_comment as delete_comment_svc
+    result = await db.execute(select(Comment).where(Comment.id == uuid.UUID(comment_id)))
+    comment = result.scalar_one_or_none()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+    await delete_comment_svc(db, comment)
+    await db.commit()
+    return RedirectResponse(url=f"/suggestions/{suggestion_id}", status_code=303)
+
+
+@router.post("/{suggestion_id}/comments/{comment_id}/edit")
+async def edit_comment(
+    suggestion_id: str,
+    comment_id: str,
+    text: str = Form(...),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    result = await db.execute(select(Comment).where(Comment.id == uuid.UUID(comment_id)))
+    comment = result.scalar_one_or_none()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    if comment.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to edit this comment")
+    from app.services.comment_service import update_comment_text
+    await update_comment_text(db, comment, text)
     await db.commit()
     return RedirectResponse(url=f"/suggestions/{suggestion_id}", status_code=303)
