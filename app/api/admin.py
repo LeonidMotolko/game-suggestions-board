@@ -38,7 +38,9 @@ async def admin_suggestions_list(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(require_admin),
 ):
-    suggestions = await get_suggestions(db)
+    raw = await get_suggestions(db)
+    # Извлекаем только объекты Suggestion (первый элемент кортежа)
+    suggestions = [item[0] for item in raw]
     return request.app.state.templates.TemplateResponse(
         "admin/suggestions_list.html",
         {"request": request, "user": current_user, "suggestions": suggestions},
@@ -94,7 +96,7 @@ async def admin_users_list(
     )
 
 
-@router.post("/users/{user_id}/ban")  # ← ТУТ POST, НЕ PUT
+@router.post("/users/{user_id}/ban")
 async def admin_toggle_ban(
     request: Request,
     user_id: str,
