@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import uuid as uuid_lib
 
 from app.database import get_async_session
 from app.dependencies import require_admin
@@ -39,7 +40,6 @@ async def admin_suggestions_list(
     current_user: User = Depends(require_admin),
 ):
     raw = await get_suggestions(db)
-    # Извлекаем только объекты Suggestion (первый элемент кортежа)
     suggestions = [item[0] for item in raw]
     return request.app.state.templates.TemplateResponse(
         "admin/suggestions_list.html",
@@ -55,7 +55,7 @@ async def admin_change_status(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(require_admin),
 ):
-    suggestion = await get_suggestion(db, suggestion_id)
+    suggestion = await get_suggestion(db, uuid_lib.UUID(suggestion_id))
     if not suggestion:
         raise HTTPException(status_code=404, detail="Suggestion not found")
     try:
@@ -74,7 +74,7 @@ async def admin_delete_suggestion(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(require_admin),
 ):
-    suggestion = await get_suggestion(db, suggestion_id)
+    suggestion = await get_suggestion(db, uuid_lib.UUID(suggestion_id))
     if not suggestion:
         raise HTTPException(status_code=404, detail="Suggestion not found")
     await delete_suggestion(db, suggestion)
@@ -103,7 +103,7 @@ async def admin_toggle_ban(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(require_admin),
 ):
-    target = await get_user_by_id(db, user_id)
+    target = await get_user_by_id(db, uuid_lib.UUID(user_id))
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     if target.id == current_user.id:
