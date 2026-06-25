@@ -6,9 +6,9 @@
     <a href="/" class="btn btn-outline btn-sm"><i class="fas fa-arrow-left"></i> На главную</a>
 </div>
 
-{% if suggestions %}
+{% if suggestions_data %}
 <div class="suggestions-grid">
-    {% for s in suggestions %}
+    {% for s, up, down, user_vote in suggestions_data %}
     <div class="card">
         <h3>{{ s.title }}</h3>
         <p>{{ s.description[:150] }}{% if s.description|length > 150 %}...{% endif %}</p>
