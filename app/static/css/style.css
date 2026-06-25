@@ -430,6 +430,53 @@ body.dark-theme tr:hover td { background: #1f2b40; }
     color: white;
 }
 
+/* ===== Футер ===== */
+.site-footer {
+    background: #2c2c2c;
+    color: #ccc;
+    padding: 2rem 2rem 1rem;
+    margin-left: 260px;  /* чтобы не залезал под сайдбар */
+    margin-top: 3rem;
+}
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #444;
+}
+.footer-contacts h4,
+.footer-download h4 {
+    color: white;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+.footer-contacts p {
+    margin: 0.25rem 0;
+}
+.footer-bottom {
+    text-align: center;
+    padding-top: 1rem;
+    font-size: 0.85rem;
+    color: #999;
+}
+@media (max-width: 768px) {
+    .site-footer {
+        margin-left: 0;
+        .footer-contacts a:hover {
+    color: #7289da !important;
+}
+    }
+    .footer-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
 /* ===== Адаптивность ===== */
 @media (max-width: 768px) {
   .sidebar {
